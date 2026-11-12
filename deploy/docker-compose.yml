@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-portal}
+      POSTGRES_USER: ${POSTGRES_USER:-portal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-portal}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portal} -d ${POSTGRES_DB:-portal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ../backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-portal};Username=${POSTGRES_USER:-portal};Password=${POSTGRES_PASSWORD:-portal}
+      Auth__FrontendUrl: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Auth__AllowDevLogin: ${ALLOW_DEV_LOGIN:-false}
+      Auth__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      Auth__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+      Jwt__Issuer: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Jwt__PrivateKeyPath: /data/keys/jwt-private.pem
+      DataProtection__KeysPath: /data/keys
+      Security__SecretPepper: ${SECRET_PEPPER:-change-me-in-production}
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-admin@example.com}
+      Seed__AdminName: ${SEED_ADMIN_NAME:-Portal Admin}
+      Seed__DemoData: ${SEED_DEMO_DATA:-true}
+      Seed__DemoAppUrl: ${PUBLIC_DEMO_URL:-https://demo.localhost}
+      Seed__DemoAppClientSecret: ${DEMO_CLIENT_SECRET:-demo-secret-change-me}
+      Cors__AllowedOrigins__0: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+    volumes:
+      - keys:/data/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../frontend
+    restart: unless-stopped
+
+  demo:
+    build:
+      context: ../demo-app
+    restart: unless-stopped
+    environment:
+      PORT: 5174
+      PORTAL_URL: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      CLIENT_ID: demo
+      CLIENT_SECRET: ${DEMO_CLIENT_SECRET:-demo-secret-change-me}
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PORTAL_DOMAIN: ${PORTAL_DOMAIN:-portal.localhost}
+      DEMO_DOMAIN: ${DEMO_DOMAIN:-demo.localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+      - demo
+
+volumes:
+  pgdata:
+  keys:
+  caddy_data:
+  caddy_config:

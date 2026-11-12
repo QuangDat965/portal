@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #070b16;
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, rgba(56, 189, 248, 0.16), transparent 60%),
+    radial-gradient(50rem 35rem at 90% 0%, rgba(129, 140, 248, 0.14), transparent 55%),
+    #070b16;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.35);
+}
