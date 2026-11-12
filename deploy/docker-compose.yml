@@ -36,6 +36,10 @@ services:
       Seed__DemoData: ${SEED_DEMO_DATA:-true}
       Seed__DemoAppUrl: ${PUBLIC_DEMO_URL:-https://demo.localhost}
       Seed__DemoAppClientSecret: ${DEMO_CLIENT_SECRET:-demo-secret-change-me}
+      Seed__TasksAppUrl: ${PUBLIC_TASKS_URL:-https://tasks.localhost}
+      Seed__TasksClientSecret: ${TASKS_CLIENT_SECRET:-tasks-secret-change-me}
+      Seed__NotesAppUrl: ${PUBLIC_NOTES_URL:-https://notes.localhost}
+      Seed__NotesClientSecret: ${NOTES_CLIENT_SECRET:-notes-secret-change-me}
       Cors__AllowedOrigins__0: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
     volumes:
       - keys:/data/keys
@@ -58,6 +62,40 @@ services:
       CLIENT_ID: demo
       CLIENT_SECRET: ${DEMO_CLIENT_SECRET:-demo-secret-change-me}
 
+  tasks:
+    build:
+      context: ../demo-apps
+      dockerfile: tasks/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      Portal__Url: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__Issuer: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__FrontendUrl: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__ClientId: tasks
+      Portal__ClientSecret: ${TASKS_CLIENT_SECRET:-tasks-secret-change-me}
+      Cookie__Secure: "true"
+    depends_on:
+      - caddy
+
+  notes:
+    build:
+      context: ../demo-apps
+      dockerfile: notes/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      Portal__Url: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__Issuer: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__FrontendUrl: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__ClientId: notes
+      Portal__ClientSecret: ${NOTES_CLIENT_SECRET:-notes-secret-change-me}
+      Cookie__Secure: "true"
+    depends_on:
+      - caddy
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -67,6 +105,8 @@ services:
     environment:
       PORTAL_DOMAIN: ${PORTAL_DOMAIN:-portal.localhost}
       DEMO_DOMAIN: ${DEMO_DOMAIN:-demo.localhost}
+      TASKS_DOMAIN: ${TASKS_DOMAIN:-tasks.localhost}
+      NOTES_DOMAIN: ${NOTES_DOMAIN:-notes.localhost}
       ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -76,6 +116,8 @@ services:
       - api
       - web
       - demo
+      - tasks
+      - notes
 
 volumes:
   pgdata:

@@ -20,6 +20,10 @@ public sealed class SeedOptions
     public string AdminPassword { get; set; } = string.Empty;
     public string DemoAppUrl { get; set; } = "http://localhost:5174";
     public string DemoAppClientSecret { get; set; } = "demo-secret-change-me";
+    public string TasksAppUrl { get; set; } = "http://localhost:5181";
+    public string TasksClientSecret { get; set; } = "tasks-secret-change-me";
+    public string NotesAppUrl { get; set; } = "http://localhost:5182";
+    public string NotesClientSecret { get; set; } = "notes-secret-change-me";
 }
 
 public sealed class SecurityOptions

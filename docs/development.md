@@ -44,7 +44,7 @@ Có thể override bằng biến môi trường `ConnectionStrings__Postgres`.
 
 ## 3. Chạy dev
 
-Mở 3 terminal:
+Mở các terminal (hoặc chạy nền):
 
 ```bash
 # 1) API — http://localhost:5080
@@ -56,9 +56,17 @@ cd frontend
 pnpm install
 pnpm dev
 
-# 3) Demo app — http://localhost:5174
+# 3) Demo app Node — http://localhost:5174
 cd demo-app
 node server.mjs
+
+# 4) Taskboard (.NET + React) — http://localhost:5181
+cd demo-apps/tasks/api
+dotnet run
+
+# 5) Team Notes (.NET + React) — http://localhost:5182
+cd demo-apps/notes/api
+dotnet run
 ```
 
 Mở http://localhost:5173 → đăng nhập `admin@example.com` / `ChangeMe_123456`, hoặc dùng
@@ -199,6 +207,38 @@ Nếu vẫn gặp `ERR_PNPM_IGNORED_BUILDS`, chạy `pnpm install --allow-build=
 
 Chạy: `cd demo-app && node server.mjs`. Đổi cổng/URL bằng `PORT`, `PORTAL_URL`,
 `CLIENT_ID`, `CLIENT_SECRET`.
+
+### 7.1. Taskboard và Team Notes (.NET + React)
+
+Hai app đầy đủ trong `demo-apps/`, minh hoạ cùng một mẫu tích hợp:
+
+- Backend ASP.NET Core minimal API, cookie session riêng, antiforgery cho mutation.
+- Đổi launch code và verify JWT qua thư viện dùng chung `demo-apps/shared/PortalSso`.
+- Frontend React 19 + Vite + Tailwind 4, i18n vi/en, TanStack Query.
+- Bundle frontend được build vào `api/wwwroot`, nên chỉ cần chạy backend.
+
+| App | Backend | Vite dev | Client id | Seed secret |
+| --- | --- | --- | --- | --- |
+| Taskboard | http://localhost:5181 | http://localhost:5183 | `tasks` | `tasks-secret-change-me` |
+| Team Notes | http://localhost:5182 | http://localhost:5184 | `notes` | `notes-secret-change-me` |
+
+```bash
+# Chạy backend (phục vụ luôn bundle trong wwwroot)
+cd demo-apps/tasks/api && dotnet run
+cd demo-apps/notes/api && dotnet run
+
+# Dev giao diện có hot reload (proxy /api và /auth về backend)
+cd demo-apps/tasks/web && pnpm install && pnpm dev
+cd demo-apps/notes/web && pnpm install && pnpm dev
+
+# Build lại bundle sau khi sửa UI
+cd demo-apps/tasks/web && pnpm build
+cd demo-apps/notes/web && pnpm build
+```
+
+Portal seed sẵn hai app này khi `Seed:DemoData=true` (mặc định ở dev) và gán cho role
+`member`; `admin` thấy mọi app. URL và secret đổi qua `Seed:TasksAppUrl`,
+`Seed:TasksClientSecret`, `Seed:NotesAppUrl`, `Seed:NotesClientSecret`.
 
 ## 8. Debug thường gặp
 

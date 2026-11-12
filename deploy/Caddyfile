@@ -26,3 +26,13 @@
 	encode zstd gzip
 	reverse_proxy demo:5174
 }
+
+{$TASKS_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy tasks:8080
+}
+
+{$NOTES_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy notes:8080
+}

@@ -45,7 +45,7 @@ public static class DbInitializer
 
         if (options.DemoData)
         {
-            await EnsureDemoAppAsync(db, hasher, options, logger, cancellationToken);
+            await EnsureDemoAppsAsync(db, hasher, options, logger, cancellationToken);
         }
 
         logger.LogInformation("Portal database đã sẵn sàng.");
@@ -117,7 +117,7 @@ public static class DbInitializer
         logger.LogInformation("Đã đặt mật khẩu đăng nhập cho admin {Email}.", admin.Email);
     }
 
-    private static async Task EnsureDemoAppAsync(
+    private static async Task EnsureDemoAppsAsync(
         PortalDbContext db,
         ISecretHasher hasher,
         SeedOptions options,
@@ -134,23 +134,83 @@ public static class DbInitializer
             return;
         }
 
-        var app = await db.Apps.FirstOrDefaultAsync(a => a.Slug == "demo", cancellationToken);
+        var seeds = new[]
+        {
+            new SeedApp(
+                "demo",
+                "Demo App",
+                "Ứng dụng mẫu để kiểm tra luồng đăng nhập một lần (SSO).",
+                options.DemoAppUrl,
+                "demo",
+                options.DemoAppClientSecret,
+                100),
+            new SeedApp(
+                "tasks",
+                "Taskboard",
+                "Bảng công việc nhóm: thêm, sửa, đánh dấu hoàn thành và xoá task.",
+                options.TasksAppUrl,
+                "tasks",
+                options.TasksClientSecret,
+                110),
+            new SeedApp(
+                "notes",
+                "Team Notes",
+                "Ghi chú nội bộ: tạo, ghim, sửa và xoá ghi chú của nhóm.",
+                options.NotesAppUrl,
+                "notes",
+                options.NotesClientSecret,
+                120)
+        };
+
+        foreach (var seed in seeds)
+        {
+            await EnsureAppAsync(db, hasher, logger, seed, memberRoleId, cancellationToken);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private sealed record SeedApp(
+        string Slug,
+        string Name,
+        string Description,
+        string BaseUrl,
+        string ClientId,
+        string ClientSecret,
+        int SortOrder);
+
+    private static async Task EnsureAppAsync(
+        PortalDbContext db,
+        ISecretHasher hasher,
+        ILogger logger,
+        SeedApp seed,
+        Guid memberRoleId,
+        CancellationToken cancellationToken)
+    {
+        var app = await db.Apps.FirstOrDefaultAsync(a => a.Slug == seed.Slug, cancellationToken);
+
         if (app is null)
         {
             app = new RegisteredApp
             {
-                Slug = "demo",
-                Name = "Demo App",
-                Description = "Ứng dụng mẫu để kiểm tra luồng đăng nhập một lần (SSO).",
-                BaseUrl = options.DemoAppUrl,
+                Slug = seed.Slug,
+                Name = seed.Name,
+                Description = seed.Description,
+                BaseUrl = seed.BaseUrl,
                 CallbackPath = "/auth/callback",
                 Status = AppStatus.Active,
-                SortOrder = 100
+                SortOrder = seed.SortOrder
             };
 
             db.Apps.Add(app);
-            await db.SaveChangesAsync(cancellationToken);
-            logger.LogInformation("Đã seed app demo tại {Url}.", options.DemoAppUrl);
+            logger.LogInformation("Đã seed app {Slug} tại {Url}.", seed.Slug, seed.BaseUrl);
+        }
+        else if (!string.Equals(app.BaseUrl, seed.BaseUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            app.BaseUrl = seed.BaseUrl;
+            app.UpdatedAt = DateTimeOffset.UtcNow;
+            logger.LogInformation(
+                "Đã cập nhật BaseUrl của app {Slug} thành {Url}.", seed.Slug, seed.BaseUrl);
         }
 
         if (!await db.AppAccess.AnyAsync(
@@ -159,16 +219,14 @@ public static class DbInitializer
             db.AppAccess.Add(new AppAccess { AppId = app.Id, RoleId = memberRoleId });
         }
 
-        if (!await db.AppClients.AnyAsync(c => c.ClientId == "demo", cancellationToken))
+        if (!await db.AppClients.AnyAsync(c => c.ClientId == seed.ClientId, cancellationToken))
         {
             db.AppClients.Add(new AppClient
             {
                 AppId = app.Id,
-                ClientId = "demo",
-                ClientSecretHash = hasher.Hash(options.DemoAppClientSecret)
+                ClientId = seed.ClientId,
+                ClientSecretHash = hasher.Hash(seed.ClientSecret)
             });
         }
-
-        await db.SaveChangesAsync(cancellationToken);
     }
 }

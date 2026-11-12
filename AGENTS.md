@@ -30,6 +30,7 @@ frontend/
   src/lib                    api client, i18n, format
   src/locales                vi.ts, en.ts
 demo-app/                    app mẫu Node thuần, verify JWT bằng JWKS
+demo-apps/                    hai app demo .NET + React (tasks, notes) + PortalSso dùng chung
 deploy/                      docker-compose, Caddyfile, .env.example
 docs/                        tài liệu kiến trúc/vận hành
 ```

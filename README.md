@@ -30,6 +30,7 @@ Người dùng ──▶ portal.domain.com (React) ──▶ /api (ASP.NET Core)
 | `backend/` | .NET 10: Domain, Application, Infrastructure, Api, Tests |
 | `frontend/` | React 19 + Vite + TypeScript + Tailwind, i18n vi/en |
 | `demo-app/` | Node thuần, minh hoạ app vệ tinh đổi code lấy JWT và verify JWKS |
+| `demo-apps/` | Hai app demo .NET + React: `tasks` (Taskboard) và `notes` (Team Notes), dùng chung thư viện `shared/PortalSso` |
 | `deploy/` | Docker Compose + Caddy + `.env.example` |
 | `docs/` | Kiến trúc, luồng auth, API, data model, vận hành, tích hợp app |
 | `AGENTS.md` | Ngữ cảnh và quy ước cho AI agent |
@@ -54,6 +55,22 @@ pnpm dev
 # 4. Demo app — http://localhost:5174
 cd demo-app
 node server.mjs
+
+# 5. Taskboard (.NET + React) — http://localhost:5181
+cd demo-apps/tasks/api
+dotnet run
+
+# 6. Team Notes (.NET + React) — http://localhost:5182
+cd demo-apps/notes/api
+dotnet run
+```
+
+Taskboard và Team Notes phục vụ luôn bundle React đã build trong `api/wwwroot`.
+Khi sửa giao diện, build lại:
+
+```bash
+cd demo-apps/tasks/web && pnpm install && pnpm build
+cd demo-apps/notes/web && pnpm install && pnpm build
 ```
 
 Mở http://localhost:5173, đăng nhập bằng `admin@example.com` / `ChangeMe_123456`
@@ -89,6 +106,8 @@ Nếu chưa cấu hình Google, nút Google trả 503; đăng nhập mật khẩ
 | Mật khẩu admin | `Seed:AdminPassword` — dev: `ChangeMe_123456`, production: để trống hoặc đặt qua secret |
 | Demo app | slug `demo`, URL `http://localhost:5174`, client id `demo` |
 | Demo client secret | `demo-secret-change-me` (đổi qua `Seed:DemoAppClientSecret`) |
+| Taskboard | slug/client id `tasks`, URL `http://localhost:5181`, secret `tasks-secret-change-me` |
+| Team Notes | slug/client id `notes`, URL `http://localhost:5182`, secret `notes-secret-change-me` |
 
 ## Lệnh thường dùng
 

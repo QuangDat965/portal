@@ -5,6 +5,9 @@ const PORT = Number(process.env.PORT || 5174)
 const PORTAL_URL = (process.env.PORTAL_URL || 'http://localhost:5080').replace(/\/$/, '')
 const CLIENT_ID = process.env.CLIENT_ID || 'demo'
 const CLIENT_SECRET = process.env.CLIENT_SECRET || 'demo-secret-change-me'
+// Optional mount prefix, e.g. BASE_PATH=/demo when the app sits behind a shared
+// reverse proxy/tunnel next to the portal. Empty means served at the root.
+const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/$/, '')
 
 let jwks = null
 
@@ -170,13 +173,26 @@ function errorPage(message) {
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url ?? '/', `http://localhost:${PORT}`)
 
-  if (url.pathname === '/health') {
+  // When mounted under BASE_PATH (e.g. /demo), strip it before routing so the
+  // rest of the handler can keep using root-absolute paths (/auth/callback, /).
+  let pathname = url.pathname
+  if (BASE_PATH) {
+    if (pathname === BASE_PATH) pathname = '/'
+    else if (pathname.startsWith(`${BASE_PATH}/`)) pathname = pathname.slice(BASE_PATH.length)
+    else {
+      response.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' })
+      response.end(errorPage('Không tìm thấy trang.'))
+      return
+    }
+  }
+
+  if (pathname === '/health') {
     response.writeHead(200, { 'Content-Type': 'text/plain' })
     response.end('ok')
     return
   }
 
-  if (url.pathname === '/auth/callback') {
+  if (pathname === '/auth/callback') {
     const code = url.searchParams.get('code')
     if (!code) {
       response.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' })
@@ -196,7 +212,7 @@ const server = http.createServer(async (request, response) => {
     return
   }
 
-  if (url.pathname === '/') {
+  if (pathname === '/') {
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     response.end(homePage())
     return

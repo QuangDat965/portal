@@ -7,3 +7,7 @@ keys/
 *.pem
 .DS_Store
 *.user
+
+
+# local test artifacts
+.artifacts/
