@@ -19,13 +19,14 @@ IdentityUser ──< IdentityUserRole >── IdentityRole
 
 | Bảng | Ghi chú |
 | --- | --- |
-| `AspNetUsers` | `Id` (Guid), `Email`, `DisplayName`, `AvatarUrl`, `CreatedAt`, `LastLoginAt` |
+| `AspNetUsers` | `Id` (Guid), `Email`, `DisplayName`, `AvatarUrl`, `CreatedAt`, `LastLoginAt`, `PasswordHash` |
 | `AspNetRoles` | Seed sẵn: `admin`, `member` |
 | `AspNetUserRoles` | N-N user ↔ role |
 | `AspNetUserLogins` | Liên kết Google (`LoginProvider = "Google"`, `ProviderKey = sub`) |
 
-Portal **không dùng mật khẩu**: chỉ external login (Google) hoặc dev login.
-Vì vậy `PasswordHash` luôn null với user thật.
+Portal hỗ trợ **Google external login** và **email/mật khẩu cục bộ**. `PasswordHash`
+chỉ có giá trị khi admin đặt mật khẩu cho user hoặc khi seed admin có
+`Seed:AdminPassword`; user tạo từ Google không có mật khẩu cho tới khi được đặt.
 
 ### AppUser
 

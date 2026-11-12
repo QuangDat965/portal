@@ -61,10 +61,12 @@ cd demo-app
 node server.mjs
 ```
 
-Mở http://localhost:5173 → **Đăng nhập dev** với `admin@example.com`.
+Mở http://localhost:5173 → đăng nhập `admin@example.com` / `ChangeMe_123456`, hoặc dùng
+**Đăng nhập dev** với `admin@example.com`.
 
-`appsettings.Development.json` bật `Auth:AllowDevLogin=true`. Startup tự migrate DB và seed:
-role `admin`/`member`, user admin, app `demo` + client `demo`.
+`appsettings.Development.json` bật `Auth:AllowDevLogin=true` và seed mật khẩu admin
+(`Seed:AdminPassword`). Startup tự migrate DB và seed: role `admin`/`member`, user admin,
+app `demo` + client `demo`.
 
 ### Biến môi trường hay dùng
 
@@ -80,6 +82,7 @@ role `admin`/`member`, user admin, app `demo` + client `demo`.
 | `Jwt__PrivateKeyPath` / `Jwt__PrivateKeyPem` | khoá ký RS256 |
 | `Security__SecretPepper` | pepper hash secret/code |
 | `Seed__AdminEmail` | email admin seed |
+| `Seed__AdminPassword` | mật khẩu đăng nhập cục bộ của admin seed (≥ 12 ký tự) |
 | `Cors__AllowedOrigins__0` | origin được phép (khi tách domain) |
 
 Dùng user-secrets cho bí mật local:
@@ -118,7 +121,13 @@ Test hiện có:
 API=http://localhost:5080
 JAR=/tmp/portal-cookies.txt
 
-# dev login
+# đăng nhập bằng mật khẩu (cần CSRF)
+CSRF=$(curl -s -c $JAR -b $JAR $API/api/auth/csrf | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
+curl -s -c $JAR -b $JAR -X POST $API/api/auth/password-login \
+  -H 'Content-Type: application/json' -H "X-CSRF-TOKEN: $CSRF" \
+  -d '{"email":"admin@example.com","password":"ChangeMe_123456"}'
+
+# hoặc dev login
 curl -s -c $JAR -X POST $API/api/auth/dev-login \
   -H 'Content-Type: application/json' \
   -d '{"email":"admin@example.com"}'

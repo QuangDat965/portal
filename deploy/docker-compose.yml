@@ -32,6 +32,7 @@ services:
       Security__SecretPepper: ${SECRET_PEPPER:-change-me-in-production}
       Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-admin@example.com}
       Seed__AdminName: ${SEED_ADMIN_NAME:-Portal Admin}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
       Seed__DemoData: ${SEED_DEMO_DATA:-true}
       Seed__DemoAppUrl: ${PUBLIC_DEMO_URL:-https://demo.localhost}
       Seed__DemoAppClientSecret: ${DEMO_CLIENT_SECRET:-demo-secret-change-me}

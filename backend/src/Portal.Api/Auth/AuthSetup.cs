@@ -20,8 +20,11 @@ public static class AuthSetup
         services.AddIdentityCore<AppUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
-                // Portal không dùng mật khẩu, chỉ external login.
+                // Hỗ trợ cả Google external login và email/mật khẩu cục bộ.
                 options.Password.RequiredLength = 12;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.AllowedForNewUsers = true;
                 options.Password.RequireDigit = false;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;

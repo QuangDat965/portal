@@ -17,6 +17,8 @@ function UserRow({
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<string[]>(user.roles)
+  const [showPassword, setShowPassword] = useState(false)
+  const [password, setPassword] = useState('')
 
   useEffect(() => {
     setSelected(user.roles)
@@ -27,6 +29,15 @@ function UserRow({
     onSuccess: async (updated) => {
       await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       onSaved(t('admin.users.saved', { email: updated.email }))
+    },
+  })
+
+  const passwordMutation = useMutation({
+    mutationFn: () => api.admin.setUserPassword(user.id, password),
+    onSuccess: () => {
+      setPassword('')
+      setShowPassword(false)
+      onSaved(t('admin.users.passwordSaved', { email: user.email }))
     },
   })
 
@@ -75,6 +86,16 @@ function UserRow({
             </label>
           ))}
           <Button
+            variant="ghost"
+            className="px-3 py-1.5 text-xs"
+            onClick={() => {
+              setShowPassword((current) => !current)
+              passwordMutation.reset()
+            }}
+          >
+            {t('admin.users.setPassword')}
+          </Button>
+          <Button
             className="px-3 py-1.5 text-xs"
             disabled={!dirty || mutation.isPending}
             onClick={() => mutation.mutate(selected)}
@@ -83,6 +104,61 @@ function UserRow({
           </Button>
         </div>
       </div>
+
+      {showPassword ? (
+        <form
+          className="mt-3 rounded-xl border border-white/10 bg-slate-950/40 p-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            passwordMutation.mutate()
+          }}
+        >
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="min-w-48 flex-1 space-y-1.5">
+              <span className="text-xs font-semibold tracking-wide text-slate-300 uppercase">
+                {t('admin.users.newPassword')}
+              </span>
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="new-password"
+                minLength={12}
+                required
+                autoFocus
+              />
+            </label>
+            <Button
+              type="submit"
+              className="px-3 py-2 text-xs"
+              disabled={passwordMutation.isPending || password.length < 12}
+            >
+              {passwordMutation.isPending
+                ? t('common.loading')
+                : t('admin.users.savePassword')}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="px-3 py-2 text-xs"
+              onClick={() => {
+                setPassword('')
+                setShowPassword(false)
+              }}
+            >
+              {t('common.cancel')}
+            </Button>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">{t('admin.users.passwordHint')}</p>
+          {passwordMutation.error ? (
+            <div className="mt-3">
+              <ErrorBanner
+                message={getErrorMessage(passwordMutation.error, t('common.error'))}
+              />
+            </div>
+          ) : null}
+        </form>
+      ) : null}
 
       {mutation.error ? (
         <div className="mt-3">

@@ -8,7 +8,7 @@ và tài liệu liên quan.
 
 Portal là một **IdP nhẹ + app launcher** cho hệ sinh thái ứng dụng nội bộ.
 
-- Người dùng đăng nhập một lần bằng Google tại `portal.domain.com`.
+- Người dùng đăng nhập một lần bằng Google hoặc email/mật khẩu cục bộ tại `portal.domain.com`.
 - Portal trả danh sách app mà user được phép dùng (quyền theo **role → app**).
 - Khi mở app, portal phát **launch code dùng một lần (60s)**.
 - App backend đổi code tại `POST /api/auth/token` bằng `client_id` + `client_secret`
@@ -80,6 +80,8 @@ cd deploy && docker compose up -d --build
 - Launch code: hash khi lưu, TTL 60s, dùng một lần (atomic update).
 - Client secret: chỉ lưu hash HMAC-SHA256 có pepper; chỉ trả plaintext một lần khi tạo/rotate.
 - Cookie: HttpOnly, Secure ở production, SameSite=Lax.
+- Mật khẩu cục bộ: do ASP.NET Core Identity hash; tối thiểu 12 ký tự; khoá tạm
+  5 phút sau 5 lần sai; chỉ admin được đặt/đổi mật khẩu; rate limit `login` 10/phút/IP.
 - Mutation dùng cookie auth phải validate antiforgery.
 - Không commit `.env`, `keys/`, `*.pem`.
 
@@ -106,6 +108,7 @@ Một thay đổi chỉ hoàn thành khi:
 ## 8. Điểm vào nhanh
 
 - Auth Google: `backend/src/Portal.Api/Auth/AuthSetup.cs`
+- Đăng nhập mật khẩu: `backend/src/Portal.Api/Endpoints/AuthEndpoints.cs` (`/password-login`)
 - Endpoint: `backend/src/Portal.Api/Endpoints/`
 - Launch + token: `backend/src/Portal.Infrastructure/Services/LaunchService.cs`
 - Quyền app: `backend/src/Portal.Infrastructure/Services/EntitlementService.cs`

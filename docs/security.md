@@ -8,6 +8,7 @@ luồng auth, claim, hoặc mô hình quyền.
 | Tài sản | Nơi lưu | Mức độ |
 | --- | --- | --- |
 | Session người dùng | cookie `portal.session` | cao |
+| Mật khẩu người dùng (hash Identity) | `AspNetUsers.PasswordHash` | cao |
 | Client secret của app | hash HMAC trong `app_clients` | cao |
 | Launch code | hash HMAC trong `launch_codes` | cao |
 | JWT private key (RS256) | file/volume `/data/keys` hoặc env | rất cao |
@@ -33,6 +34,8 @@ luồng auth, claim, hoặc mô hình quyền.
 - `POST /api/auth/token` là server-to-server, không dùng cookie, không cần CSRF.
 - `POST /api/auth/dev-login` không yêu cầu CSRF vì mục đích tạo session đầu tiên;
   endpoint này **phải tắt** ở production.
+- `POST /api/auth/password-login` **có** yêu cầu CSRF để chống login CSRF; client lấy
+  token qua `GET /api/auth/csrf` trước khi gửi mật khẩu.
 
 ### 2.3 Chiếm đoạt launch code
 
@@ -72,7 +75,8 @@ luồng auth, claim, hoặc mô hình quyền.
 
 ### 2.7 Lạm dụng / DoS
 
-- Rate limit theo IP: `launch` 30/phút, `token` 60/phút.
+- Rate limit theo IP: `launch` 30/phút, `token` 60/phút, `login` 10/phút.
+  Ngoài ra Identity khoá tài khoản 5 phút sau 5 lần nhập sai.
 - JSON body kích thước mặc định của ASP.NET Core.
 - Truy vấn có `Take`/clamp (`users` ≤ 200, `audit` ≤ 200).
 - Có thể thêm rate limit toàn cục hoặc tại Caddy khi cần.
@@ -92,6 +96,16 @@ luồng auth, claim, hoặc mô hình quyền.
 - `Cookie.SecurePolicy = SameAsRequest` → production **bắt buộc** HTTPS (Caddy lo TLS).
 - Không commit `.env`, `keys/`, `*.pem` (đã có `.gitignore`).
 - DataProtection keys persist qua volume, tránh mất session sau deploy.
+
+### 2.10 Mật khẩu cục bộ
+
+- Mật khẩu do ASP.NET Core Identity hash (PBKDF2, salt riêng cho từng user).
+- Policy: tối thiểu 12 ký tự; không bắt buộc ký tự đặc biệt (khuyến khích passphrase).
+- Sai 5 lần → khoá 5 phút (`Lockout`); rate limit `login` 10/phút/IP.
+- Lỗi đăng nhập trả `401` với thông báo chung, không phân biệt email tồn tại hay không.
+- Không log mật khẩu; không trả `PasswordHash` qua API.
+- Chỉ admin đặt/đổi mật khẩu (`PUT /api/admin/users/{id}/password`); thao tác được audit.
+- `Seed:AdminPassword` chỉ nên đặt ở môi trường dev hoặc qua secret manager khi deploy.
 
 ## 3. Ranh giới tin cậy
 
@@ -138,5 +152,5 @@ Khi thêm endpoint/feature:
 | Chưa có discovery document | Thêm `/.well-known/openid-configuration` |
 | Một signing key | Mở rộng `SigningKeyProvider` cho key rotation |
 | Rate limit theo IP đơn thuần | Kết hợp user/app, hoặc giới hạn ở Caddy/WAF |
-| Chưa có 2FA riêng | Dựa vào Google (có thể bật 2FA tại Google) |
+| Chưa có 2FA riêng | Dựa vào Google (có thể bật 2FA tại Google); user mật khẩu cục bộ chưa có 2FA |
 | Chưa có phân quyền chi tiết trong app | App tự map `role[]` sang quyền nội bộ |

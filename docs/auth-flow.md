@@ -38,7 +38,27 @@ Browser            Portal API                 Google
 | Thời hạn | 7 ngày, sliding |
 | Phạm vi | host portal |
 
-## 2. Dev login
+## 2. Đăng nhập bằng email/mật khẩu
+
+```
+POST /api/auth/password-login      (CSRF header + cookie portal.csrf)
+Content-Type: application/json
+
+{ "email": "admin@example.com", "password": "..." }
+```
+
+- `email` nhận **email hoặc username** (user tạo từ Google có `UserName = email`).
+- Xác thực bằng `SignInManager.PasswordSignInAsync`; thành công ghi cookie
+  `portal.session` như luồng Google.
+- Sai thông tin → `401` với **cùng một thông báo** (không lộ email có tồn tại hay không).
+- Khoá tạm 5 phút sau 5 lần nhập sai → `423`.
+- Rate limit `login` 10 request/phút/IP.
+- User chỉ có Google login (chưa có `PasswordHash`) không đăng nhập được bằng mật khẩu
+  cho tới khi admin đặt mật khẩu tại `PUT /api/admin/users/{id}/password`.
+- Admin có thể đặt mật khẩu seed qua `Seed:AdminPassword` (mặc định chỉ đặt ở
+  `appsettings.Development.json`).
+
+## 3. Dev login
 
 Chỉ bật khi `Auth:AllowDevLogin=true` **và** môi trường phát triển.
 
@@ -51,7 +71,7 @@ POST /api/auth/dev-login
 - `admin@example.com` được seed sẵn role `admin`.
 - Không có mật khẩu; đây là công cụ local, không dùng production.
 
-## 3. Lấy danh sách app
+## 4. Lấy danh sách app
 
 ```
 GET /api/me/apps            (cookie session)
@@ -61,7 +81,7 @@ GET /api/me/apps            (cookie session)
 - User thường: app `Active` có `app_access.role_id` nằm trong role của user.
 - Kết quả sắp xếp theo `sort_order`, `name`.
 
-## 4. Launch code
+## 5. Launch code
 
 ```
 POST /api/apps/{slug}/launch      (cookie + CSRF header)
@@ -88,7 +108,7 @@ Kết quả:
 - Hết hạn sau 60 giây, dùng một lần.
 - Ghi `audit_logs` action `app.launch`.
 
-## 5. Đổi code lấy token
+## 6. Đổi code lấy token
 
 ```
 POST /api/auth/token
@@ -120,7 +140,7 @@ Thành công `200`:
 
 Thất bại: `400 { "error": "invalid_grant" }` cho mọi trường hợp (không tiết lộ lý do).
 
-## 6. JWT
+## 7. JWT
 
 | Claim | Ý nghĩa |
 | --- | --- |
@@ -141,7 +161,7 @@ Ký bằng **RS256**. Public key công bố tại:
 GET /api/.well-known/jwks.json
 ```
 
-## 7. App xác minh JWT
+## 8. App xác minh JWT
 
 App cần:
 
@@ -172,7 +192,7 @@ const ok = crypto.verify(
 
 Xem code đầy đủ trong `demo-app/server.mjs`.
 
-## 8. Đăng xuất
+## 9. Đăng xuất
 
 ```
 POST /api/auth/logout      (cookie + CSRF header)

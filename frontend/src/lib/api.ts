@@ -166,6 +166,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ email, name: name || null }),
     }),
+  passwordLogin: (email: string, password: string) =>
+    request<{ ok: boolean }>('/api/auth/password-login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
   logout: async () => {
     await request<void>('/api/auth/logout', { method: 'POST' })
     csrfToken = null
@@ -197,6 +202,11 @@ export const api = {
       request<AdminUser>(`/api/admin/users/${id}/roles`, {
         method: 'PUT',
         body: JSON.stringify({ roles }),
+      }),
+    setUserPassword: (id: string, password: string) =>
+      request<void>(`/api/admin/users/${id}/password`, {
+        method: 'PUT',
+        body: JSON.stringify({ password }),
       }),
     audit: (take = 100) => request<AuditLog[]>(`/api/admin/audit?take=${take}`),
   },

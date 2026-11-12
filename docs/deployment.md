@@ -52,6 +52,7 @@ cp .env.example .env
 | `SECRET_PEPPER` | chuỗi ngẫu nhiên ≥ 32 ký tự, **không đổi sau khi có dữ liệu** |
 | `DEMO_CLIENT_SECRET` | secret của demo client |
 | `SEED_ADMIN_EMAIL` | email admin đầu tiên |
+| `SEED_ADMIN_PASSWORD` | mật khẩu đăng nhập cục bộ cho admin (≥ 12 ký tự); để trống nếu chỉ dùng Google |
 | `ALLOW_DEV_LOGIN` | **false** ở production |
 
 Sinh bí mật:

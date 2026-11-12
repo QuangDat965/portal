@@ -332,6 +332,49 @@ public static partial class AdminEndpoints
             return Results.Ok((await ToAdminUsersAsync(db, [target], cancellationToken)).Single());
         });
 
+        group.MapPut("/users/{id:guid}/password", async (
+            Guid id,
+            SetUserPasswordRequest request,
+            HttpContext context,
+            ClaimsPrincipal currentUser,
+            UserManager<AppUser> userManager,
+            PortalDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            if (await context.ValidateAntiforgeryAsync() is { } csrfError)
+            {
+                return csrfError;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                return Results.BadRequest(new { error = "Mật khẩu không được để trống." });
+            }
+
+            var target = await db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+            if (target is null)
+            {
+                return Results.NotFound();
+            }
+
+            var token = await userManager.GeneratePasswordResetTokenAsync(target);
+            var result = await userManager.ResetPasswordAsync(target, token, request.Password);
+
+            if (!result.Succeeded)
+            {
+                return Results.BadRequest(new
+                {
+                    error = string.Join("; ", result.Errors.Select(e => e.Description))
+                });
+            }
+
+            AddAudit(db, currentUser, context, null, "admin.user_password_reset",
+                target.Email);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return Results.NoContent();
+        });
+
         group.MapGet("/audit", async (
             int? take,
             PortalDbContext db,

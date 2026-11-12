@@ -37,7 +37,7 @@
 
 ### Frontend (React 19 + Vite)
 
-- `LoginPage`: Google login + dev login.
+- `LoginPage`: Google login + email/mật khẩu + dev login.
 - `LauncherPage`: grid app theo quyền.
 - `ProfilePage`: thông tin user/role.
 - `AdminPage`: tab Apps / Users / Audit.

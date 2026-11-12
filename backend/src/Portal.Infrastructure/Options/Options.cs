@@ -17,6 +17,7 @@ public sealed class SeedOptions
     public bool DemoData { get; set; } = true;
     public string AdminEmail { get; set; } = "admin@example.com";
     public string AdminName { get; set; } = "Portal Admin";
+    public string AdminPassword { get; set; } = string.Empty;
     public string DemoAppUrl { get; set; } = "http://localhost:5174";
     public string DemoAppClientSecret { get; set; } = "demo-secret-change-me";
 }

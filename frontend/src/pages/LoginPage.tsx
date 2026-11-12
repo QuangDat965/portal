@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useSearchParams } from 'react-router-dom'
-import { api, getErrorMessage } from '../lib/api'
+import { api, ApiError, getErrorMessage } from '../lib/api'
 import { useMe } from '../components/auth'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
 import { Button, Card, ErrorBanner, Field, Input } from '../components/ui'
@@ -11,9 +11,18 @@ export function LoginPage() {
   const { t } = useTranslation()
   const { data: me, isLoading } = useMe()
   const [searchParams] = useSearchParams()
+  const [identifier, setIdentifier] = useState('admin@example.com')
+  const [password, setPassword] = useState('')
   const [email, setEmail] = useState('admin@example.com')
   const [name, setName] = useState('')
   const queryClient = useQueryClient()
+
+  const passwordLoginMutation = useMutation({
+    mutationFn: () => api.passwordLogin(identifier, password),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+    },
+  })
 
   const loginMutation = useMutation({
     mutationFn: () => api.devLogin(email, name),
@@ -27,6 +36,16 @@ export function LoginPage() {
 
   const googleError = searchParams.get('error') === 'google'
   const showDevLogin = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEV_LOGIN === 'true'
+
+  const passwordError = passwordLoginMutation.error
+    ? passwordLoginMutation.error instanceof ApiError
+      ? passwordLoginMutation.error.status === 401
+        ? t('login.invalid')
+        : passwordLoginMutation.error.status === 423
+          ? t('login.locked')
+          : passwordLoginMutation.error.message
+      : getErrorMessage(passwordLoginMutation.error, t('login.failed'))
+    : null
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
@@ -55,12 +74,56 @@ export function LoginPage() {
             </div>
           ) : null}
 
+          <form
+            className="mt-6 space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              passwordLoginMutation.mutate()
+            }}
+          >
+            <Field label={t('login.identifier')}>
+              <Input
+                type="text"
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                autoComplete="username"
+                autoFocus
+                required
+              />
+            </Field>
+            <Field label={t('login.password')}>
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </Field>
+            {passwordError ? <ErrorBanner message={passwordError} /> : null}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={passwordLoginMutation.isPending}
+            >
+              {passwordLoginMutation.isPending
+                ? t('common.loading')
+                : t('login.signIn')}
+            </Button>
+          </form>
+
+          <div className="mt-6 flex items-center gap-3">
+            <span className="h-px flex-1 bg-white/10" />
+            <span className="text-xs text-slate-500">{t('login.or')}</span>
+            <span className="h-px flex-1 bg-white/10" />
+          </div>
+
           <button
             type="button"
             onClick={() => {
               window.location.href = '/api/auth/google'
             }}
-            className="mt-6 flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+            className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
               <path

@@ -27,6 +27,23 @@ sang `/api/auth/google/complete`.
 Đọc session sau callback và redirect về `Auth:FrontendUrl/apps`
 (hoặc `/login?error=google`).
 
+### `POST /api/auth/password-login`
+
+Đăng nhập bằng email/username + mật khẩu. Yêu cầu CSRF (`GET /api/auth/csrf` trước).
+
+```json
+{ "email": "admin@example.com", "password": "..." }
+```
+
+`200 { "ok": true }` + `Set-Cookie: portal.session`.
+
+Lỗi:
+
+- `400` thiếu email/mật khẩu hoặc CSRF sai.
+- `401` sai thông tin (thông báo chung, không lộ email tồn tại).
+- `423` tài khoản tạm khoá sau 5 lần sai (5 phút).
+- `429` vượt rate limit `login` (10/phút/IP).
+
 ### `POST /api/auth/dev-login`
 
 Chỉ hoạt động khi `Auth:AllowDevLogin=true`. Không cần CSRF (dùng để lấy session đầu tiên).
@@ -248,6 +265,17 @@ Tối đa 200 user, tìm theo email hoặc tên.
 - `400` tự bỏ quyền admin của chính mình.
 - `400` bỏ admin của admin cuối cùng.
 
+### `PUT /api/admin/users/{id}/password`
+
+Đặt/đổi mật khẩu cục bộ cho user. Yêu cầu CSRF.
+
+```json
+{ "password": "mat-khau-moi-toi-thieu-12-ky-tu" }
+```
+
+`204`. Lỗi `400` nếu mật khẩu không đạt policy (tối thiểu 12 ký tự).
+Hành động được ghi audit `admin.user_password_reset`.
+
 ### `GET /api/admin/audit?take=100`
 
 `take` clamp 1..200, sắp xếp mới nhất trước.
@@ -280,6 +308,7 @@ Tối đa 200 user, tìm theo email hoặc tên.
 | `403` | thiếu role (vd. không phải admin), dev login tắt |
 | `404` | không tồn tại hoặc không có quyền |
 | `409` | slug trùng |
+| `423` | tài khoản đang bị khoá tạm do đăng nhập sai nhiều lần |
 | `429` | vượt rate limit |
 | `503` | Google OAuth chưa cấu hình |
 

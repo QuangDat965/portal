@@ -4,6 +4,10 @@ namespace Portal.Api.Contracts;
 
 public sealed record DevLoginRequest(string Email, string? Name);
 
+public sealed record PasswordLoginRequest(string Email, string Password);
+
+public sealed record SetUserPasswordRequest(string Password);
+
 public sealed record ExchangeTokenRequest(string ClientId, string ClientSecret, string Code);
 
 public sealed record AppUpsertRequest(

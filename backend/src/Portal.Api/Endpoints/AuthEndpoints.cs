@@ -47,6 +47,66 @@ public static class AuthEndpoints
                 : Results.Redirect($"{frontend}/login?error=google");
         });
 
+        group.MapPost("/password-login", async (
+            PasswordLoginRequest request,
+            HttpContext context,
+            UserManager<AppUser> userManager,
+            SignInManager<AppUser> signInManager,
+            ILoggerFactory loggerFactory) =>
+        {
+            if (await context.ValidateAntiforgeryAsync() is { } csrfError)
+            {
+                return csrfError;
+            }
+
+            var identifier = request.Email?.Trim();
+            if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrEmpty(request.Password))
+            {
+                return Results.BadRequest(new
+                {
+                    error = "Email/tên đăng nhập và mật khẩu là bắt buộc."
+                });
+            }
+
+            var user = await userManager.FindByEmailAsync(identifier)
+                       ?? await userManager.FindByNameAsync(identifier);
+
+            if (user is null || !await userManager.HasPasswordAsync(user))
+            {
+                return Results.Json(
+                    new { error = "Email/tên đăng nhập hoặc mật khẩu không đúng." },
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            var result = await signInManager.PasswordSignInAsync(
+                user, request.Password, isPersistent: true, lockoutOnFailure: true);
+
+            if (result.IsLockedOut)
+            {
+                loggerFactory.CreateLogger("PasswordLogin").LogWarning(
+                    "Tài khoản {Email} bị tạm khoá do đăng nhập sai nhiều lần.", user.Email);
+
+                return Results.Json(
+                    new { error = "Tài khoản tạm khoá do đăng nhập sai nhiều lần. Thử lại sau ít phút." },
+                    statusCode: StatusCodes.Status423Locked);
+            }
+
+            if (!result.Succeeded)
+            {
+                return Results.Json(
+                    new { error = "Email/tên đăng nhập hoặc mật khẩu không đúng." },
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            user.LastLoginAt = DateTimeOffset.UtcNow;
+            await userManager.UpdateAsync(user);
+
+            loggerFactory.CreateLogger("PasswordLogin").LogInformation(
+                "Password login cho {Email}.", user.Email);
+
+            return Results.Ok(new { ok = true });
+        }).RequireRateLimiting("login");
+
         group.MapPost("/dev-login", async (
             DevLoginRequest request,
             UserManager<AppUser> userManager,

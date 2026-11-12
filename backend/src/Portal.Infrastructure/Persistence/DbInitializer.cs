@@ -64,6 +64,7 @@ public static class DbInitializer
         var admin = await userManager.FindByEmailAsync(options.AdminEmail);
         if (admin is not null)
         {
+            await EnsureAdminPasswordAsync(userManager, admin, options, logger);
             return admin;
         }
 
@@ -87,7 +88,33 @@ public static class DbInitializer
         }
 
         logger.LogInformation("Đã seed admin {Email}.", options.AdminEmail);
+        await EnsureAdminPasswordAsync(userManager, admin, options, logger);
         return admin;
+    }
+
+    private static async Task EnsureAdminPasswordAsync(
+        UserManager<AppUser> userManager,
+        AppUser admin,
+        SeedOptions options,
+        ILogger logger)
+    {
+        if (string.IsNullOrWhiteSpace(options.AdminPassword)
+            || await userManager.HasPasswordAsync(admin))
+        {
+            return;
+        }
+
+        var result = await userManager.AddPasswordAsync(admin, options.AdminPassword);
+        if (!result.Succeeded)
+        {
+            logger.LogError(
+                "Không đặt được mật khẩu cho admin {Email}: {Errors}",
+                admin.Email,
+                string.Join("; ", result.Errors.Select(e => e.Description)));
+            return;
+        }
+
+        logger.LogInformation("Đã đặt mật khẩu đăng nhập cho admin {Email}.", admin.Email);
     }
 
     private static async Task EnsureDemoAppAsync(

@@ -15,6 +15,7 @@ Người dùng ──▶ portal.domain.com (React) ──▶ /api (ASP.NET Core)
 ## Tính năng hiện có
 
 - Đăng nhập Google (OAuth 2.0) + cookie session HttpOnly.
+- Đăng nhập email/mật khẩu cục bộ (admin đặt mật khẩu, khoá tạm khi sai nhiều lần).
 - Dev login cho môi trường phát triển.
 - Danh sách app theo **role → app** (admin thấy tất cả app đang bật).
 - Launch code dùng một lần, đổi lấy JWT RS256; công bố JWKS để app tự xác minh.
@@ -55,7 +56,9 @@ cd demo-app
 node server.mjs
 ```
 
-Mở http://localhost:5173, chọn **đăng nhập dev** với `admin@example.com` (mật khẩu không cần vì đây là dev login).
+Mở http://localhost:5173, đăng nhập bằng `admin@example.com` / `ChangeMe_123456`
+(mật khẩu seed chỉ có ở `appsettings.Development.json`), hoặc dùng **đăng nhập dev**
+với `admin@example.com`.
 
 ### Chạy toàn bộ bằng Docker
 
@@ -75,7 +78,7 @@ Chi tiết xem [docs/deployment.md](docs/deployment.md).
    - Production: `https://portal.example.com/api/auth/google/callback`
 3. Điền `Auth:Google:ClientId` và `Auth:Google:ClientSecret` (user-secrets hoặc biến môi trường `Auth__Google__ClientId`, `Auth__Google__ClientSecret`).
 
-Nếu chưa cấu hình Google, nút Google trả 503; dev login vẫn dùng được khi `Auth:AllowDevLogin=true`.
+Nếu chưa cấu hình Google, nút Google trả 503; đăng nhập mật khẩu và dev login vẫn dùng được.
 
 ## Seed mặc định
 
@@ -83,6 +86,7 @@ Nếu chưa cấu hình Google, nút Google trả 503; dev login vẫn dùng đ�
 | --- | --- |
 | Role | `admin`, `member` |
 | Admin | `admin@example.com` (đổi qua `Seed:AdminEmail`) |
+| Mật khẩu admin | `Seed:AdminPassword` — dev: `ChangeMe_123456`, production: để trống hoặc đặt qua secret |
 | Demo app | slug `demo`, URL `http://localhost:5174`, client id `demo` |
 | Demo client secret | `demo-secret-change-me` (đổi qua `Seed:DemoAppClientSecret`) |
 
