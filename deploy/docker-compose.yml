@@ -40,6 +40,8 @@ services:
       Seed__TasksClientSecret: ${TASKS_CLIENT_SECRET:-tasks-secret-change-me}
       Seed__NotesAppUrl: ${PUBLIC_NOTES_URL:-https://notes.localhost}
       Seed__NotesClientSecret: ${NOTES_CLIENT_SECRET:-notes-secret-change-me}
+      Seed__KittensAppUrl: ${PUBLIC_KITTENS_URL:-https://kittens.localhost}
+      Seed__KittensClientSecret: ${KITTENS_CLIENT_SECRET:-exploding-kittens-secret-change-me}
       Cors__AllowedOrigins__0: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
     volumes:
       - keys:/data/keys
@@ -76,8 +78,6 @@ services:
       Portal__ClientId: tasks
       Portal__ClientSecret: ${TASKS_CLIENT_SECRET:-tasks-secret-change-me}
       Cookie__Secure: "true"
-    depends_on:
-      - caddy
 
   notes:
     build:
@@ -93,8 +93,27 @@ services:
       Portal__ClientId: notes
       Portal__ClientSecret: ${NOTES_CLIENT_SECRET:-notes-secret-change-me}
       Cookie__Secure: "true"
+
+  kittens:
+    build:
+      context: ../demo-apps
+      dockerfile: exploding-kittens/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-portal};Username=${POSTGRES_USER:-portal};Password=${POSTGRES_PASSWORD:-portal}
+      Portal__Url: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__Issuer: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__FrontendUrl: ${PUBLIC_PORTAL_URL:-https://portal.localhost}
+      Portal__ClientId: exploding-kittens
+      Portal__ClientSecret: ${KITTENS_CLIENT_SECRET:-exploding-kittens-secret-change-me}
+      Cookie__Secure: "true"
+    volumes:
+      - kittens_keys:/root/.aspnet/DataProtection-Keys
     depends_on:
-      - caddy
+      postgres:
+        condition: service_healthy
 
   caddy:
     image: caddy:2-alpine
@@ -106,6 +125,7 @@ services:
       PORTAL_DOMAIN: ${PORTAL_DOMAIN:-portal.localhost}
       DEMO_DOMAIN: ${DEMO_DOMAIN:-demo.localhost}
       TASKS_DOMAIN: ${TASKS_DOMAIN:-tasks.localhost}
+      KITTENS_DOMAIN: ${KITTENS_DOMAIN:-kittens.localhost}
       NOTES_DOMAIN: ${NOTES_DOMAIN:-notes.localhost}
       ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
     volumes:
@@ -118,8 +138,10 @@ services:
       - demo
       - tasks
       - notes
+      - kittens
 
 volumes:
+  kittens_keys:
   pgdata:
   keys:
   caddy_data:

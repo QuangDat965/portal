@@ -8,3 +8,6 @@ web/
 .idea/
 *.user
 appsettings.Local.json
+
+!exploding-kittens/web/src/
+!exploding-kittens/web/src/**

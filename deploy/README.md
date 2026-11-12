@@ -43,6 +43,9 @@ openssl rand -base64 32   # POSTGRES_PASSWORD / DEMO_CLIENT_SECRET
 | `DEMO_DOMAIN` | Domain demo | Caddy | vd. `demo.example.com` |
 | `TASKS_DOMAIN` | Domain Taskboard | Caddy | vd. `tasks.example.com` |
 | `NOTES_DOMAIN` | Domain Team Notes | Caddy | vd. `notes.example.com` |
+| `KITTENS_DOMAIN` | Domain Mèo Nổ | Caddy | vd. `kittens.example.com` |
+| `PUBLIC_KITTENS_URL` | URL đầy đủ Mèo Nổ | `Seed__KittensAppUrl` | Phải khớp KITTENS_DOMAIN |
+| `KITTENS_CLIENT_SECRET` | Secret client `exploding-kittens` | Seed và service kittens | Bắt buộc đổi ở production |
 | `PUBLIC_PORTAL_URL` | URL đầy đủ portal (`https://…`) | `Auth__FrontendUrl`, `Jwt__Issuer`, `Cors__AllowedOrigins__0`, `Portal__Url`/`Portal__Issuer` của tasks & notes | **Phải khớp scheme+host** với `PORTAL_DOMAIN` |
 | `PUBLIC_DEMO_URL` | URL đầy đủ demo | `Seed__DemoAppUrl` | |
 | `PUBLIC_TASKS_URL` | URL đầy đủ Taskboard | `Seed__TasksAppUrl` | khớp `TASKS_DOMAIN` |
@@ -99,6 +102,7 @@ openssl rand -base64 32   # POSTGRES_PASSWORD / DEMO_CLIENT_SECRET
 | `DEMO_DOMAIN` | `/*` | `demo:5174` (Node) |
 | `TASKS_DOMAIN` | `/*` | `tasks:8080` (.NET + React SPA) |
 | `NOTES_DOMAIN` | `/*` | `notes:8080` (.NET + React SPA) |
+| `KITTENS_DOMAIN` | `/*` | `kittens:8080` (.NET + React SPA) |
 
 Tất cả service đã có sẵn trong `docker-compose.yml` và `Caddyfile` — chỉ cần khai domain trong `.env` là xong. Thêm app khác → xem mục 5.
 
@@ -212,3 +216,7 @@ Chỉ cần đặt `TASKS_DOMAIN` / `NOTES_DOMAIN` / `PUBLIC_TASKS_URL` / `PUBLI
 | App báo invalid signature | JWKS cache cũ / JWT key bị sinh lại (volume `keys` mất) |
 | Mọi user bị logout sau deploy | `DataProtection__KeysPath` không persist |
 | Launch app ra `localhost` | `BaseUrl` của app trong Admin UI vẫn là localhost — sửa thành domain thật |
+
+Mèo Nổ: service `kittens` tự build cả React và .NET từ `demo-apps/`.
+State lưu trong schema `exploding_kittens` cùng PostgreSQL hiện có; cookie keys lưu
+ở volume `kittens_keys`. Xem [cấu hình và luật MVP](../docs/exploding-kittens.md).

@@ -30,7 +30,7 @@ frontend/
   src/lib                    api client, i18n, format
   src/locales                vi.ts, en.ts
 demo-app/                    app mẫu Node thuần, verify JWT bằng JWKS
-demo-apps/                    hai app demo .NET + React (tasks, notes) + PortalSso dùng chung
+demo-apps/                    ba app .NET + React (tasks, notes, exploding-kittens) + PortalSso dùng chung
 deploy/                      docker-compose, Caddyfile, .env.example
 docs/                        tài liệu kiến trúc/vận hành
 ```
@@ -117,3 +117,27 @@ Một thay đổi chỉ hoàn thành khi:
 - Seed: `backend/src/Portal.Infrastructure/Persistence/DbInitializer.cs`
 - API client frontend: `frontend/src/lib/api.ts`
 - Admin UI: `frontend/src/pages/admin/`
+
+## 9. App Mèo Nổ
+
+- `demo-apps/exploding-kittens/`: app vệ tinh dùng PortalSso; không thay đổi luồng auth/claim/quyền.
+- API ở cổng 5185, Vite ở 5186; client id `exploding-kittens`, callback `/auth/callback`.
+- Seed khi `Seed:DemoData=true`: role member được truy cập như các app demo khác.
+- Ván 2–5 người, state và bài ẩn do server quyết định; schema PostgreSQL `exploding_kittens`
+  và bảng migration riêng. Mutation theo phòng dùng PostgreSQL advisory transaction lock.
+- MVP: tự động Giải cứu + chèn mèo ngẫu nhiên; Favor lấy bài ngẫu nhiên; chưa có Nope.
+  Skip trả một lượt rút; Attack cộng dồn phần nợ còn lại + 2 (bình thường là 2).
+- UI dùng TanStack Query cập nhật mỗi 2 giây; không trả bộ bài/tay bài đối thủ qua API/hub.
+  Xem tương lai chỉ trả qua response riêng của người đánh. Hub `RoomChanged` chỉ báo room id.
+- Kiểm tra: `dotnet test demo-apps/exploding-kittens/tests`; frontend `pnpm typecheck`, `pnpm build`.
+  Set `EK_TEST_POSTGRES` tới database kiểm thử riêng để chạy thêm test persistence/concurrency.
+- Vận hành/API/luật chi tiết: `docs/exploding-kittens.md`.
+
+- Giao diện Mèo Nổ dùng Motion 14 (`motion/react`), CSS 2.5D và artwork SVG gốc;
+  skill Motion tại `demo-apps/exploding-kittens/web/.agents/skills/motion/SKILL.md`.
+  Giữ `MotionConfig reducedMotion="user"`, không gắn logic game với thời lượng animation.
+- `GameView` bổ sung `revision`, `recentEvents` (32 sự kiện công khai), `discardTop`,
+  `discardCount`; migration `PublicGameEvents` không sửa luật hay dữ liệu bài cũ.
+  Không đưa loại bài rút, lá Favor lấy được hoặc bài tương lai vào event công khai.
+- Presentation state tách khỏi snapshot server; reducer chống sự kiện trùng/lệch thứ tự,
+  giữ identity bài và resync khi reconnect. Chạy thêm `pnpm test` trong web Mèo Nổ.

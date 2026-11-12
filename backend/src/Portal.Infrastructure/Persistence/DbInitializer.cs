@@ -159,7 +159,15 @@ public static class DbInitializer
                 options.NotesAppUrl,
                 "notes",
                 options.NotesClientSecret,
-                120)
+                120),
+            new SeedApp(
+                "exploding-kittens",
+                "Mèo Nổ",
+                "Chơi Mèo Nổ online cùng 2–5 người bạn.",
+                options.KittensAppUrl,
+                "exploding-kittens",
+                options.KittensClientSecret,
+                130)
         };
 
         foreach (var seed in seeds)

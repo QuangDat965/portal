@@ -22,6 +22,8 @@ public sealed class SeedOptions
     public string DemoAppClientSecret { get; set; } = "demo-secret-change-me";
     public string TasksAppUrl { get; set; } = "http://localhost:5181";
     public string TasksClientSecret { get; set; } = "tasks-secret-change-me";
+    public string KittensAppUrl { get; set; } = "http://localhost:5185";
+    public string KittensClientSecret { get; set; } = "exploding-kittens-secret-change-me";
     public string NotesAppUrl { get; set; } = "http://localhost:5182";
     public string NotesClientSecret { get; set; } = "notes-secret-change-me";
 }

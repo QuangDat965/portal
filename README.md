@@ -30,7 +30,7 @@ Người dùng ──▶ portal.domain.com (React) ──▶ /api (ASP.NET Core)
 | `backend/` | .NET 10: Domain, Application, Infrastructure, Api, Tests |
 | `frontend/` | React 19 + Vite + TypeScript + Tailwind, i18n vi/en |
 | `demo-app/` | Node thuần, minh hoạ app vệ tinh đổi code lấy JWT và verify JWKS |
-| `demo-apps/` | Hai app demo .NET + React: `tasks` (Taskboard) và `notes` (Team Notes), dùng chung thư viện `shared/PortalSso` |
+| `demo-apps/` | Ba app .NET + React: `tasks` (Taskboard), `notes` (Team Notes), `exploding-kittens` (Mèo Nổ), dùng chung thư viện `shared/PortalSso` |
 | `deploy/` | Docker Compose + Caddy + `.env.example` |
 | `docs/` | Kiến trúc, luồng auth, API, data model, vận hành, tích hợp app |
 | `AGENTS.md` | Ngữ cảnh và quy ước cho AI agent |
@@ -108,6 +108,7 @@ Nếu chưa cấu hình Google, nút Google trả 503; đăng nhập mật khẩ
 | Demo client secret | `demo-secret-change-me` (đổi qua `Seed:DemoAppClientSecret`) |
 | Taskboard | slug/client id `tasks`, URL `http://localhost:5181`, secret `tasks-secret-change-me` |
 | Team Notes | slug/client id `notes`, URL `http://localhost:5182`, secret `notes-secret-change-me` |
+| Mèo Nổ | slug/client id `exploding-kittens`, API `http://localhost:5185`, Vite `http://localhost:5186` |
 
 ## Lệnh thường dùng
 
@@ -139,3 +140,5 @@ curl http://localhost:5080/api/health
 ## Giấy phép
 
 Nội bộ — chưa chọn giấy phép mã nguồn mở.
+
+App Mèo Nổ 2–5 người: xem [hướng dẫn chạy, luật chơi và API](docs/exploding-kittens.md).

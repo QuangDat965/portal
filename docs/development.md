@@ -210,7 +210,7 @@ Chạy: `cd demo-app && node server.mjs`. Đổi cổng/URL bằng `PORT`, `PORT
 
 ### 7.1. Taskboard và Team Notes (.NET + React)
 
-Hai app đầy đủ trong `demo-apps/`, minh hoạ cùng một mẫu tích hợp:
+Các app trong `demo-apps/`, minh hoạ cùng một mẫu tích hợp:
 
 - Backend ASP.NET Core minimal API, cookie session riêng, antiforgery cho mutation.
 - Đổi launch code và verify JWT qua thư viện dùng chung `demo-apps/shared/PortalSso`.
@@ -221,6 +221,7 @@ Hai app đầy đủ trong `demo-apps/`, minh hoạ cùng một mẫu tích hợ
 | --- | --- | --- | --- | --- |
 | Taskboard | http://localhost:5181 | http://localhost:5183 | `tasks` | `tasks-secret-change-me` |
 | Team Notes | http://localhost:5182 | http://localhost:5184 | `notes` | `notes-secret-change-me` |
+| Mèo Nổ | http://localhost:5185 | http://localhost:5186 | `exploding-kittens` | `exploding-kittens-secret-change-me` |
 
 ```bash
 # Chạy backend (phục vụ luôn bundle trong wwwroot)
@@ -252,3 +253,5 @@ Portal seed sẵn hai app này khi `Seed:DemoData=true` (mặc định ở dev) 
 | JWT `iss` sai | đặt `Jwt__Issuer` bằng URL công khai của portal |
 | Demo app báo “Chữ ký JWT không hợp lệ” | JWKS cache cũ sau khi đổi khoá; restart demo app |
 | `pnpm` báo ignored build `esbuild` | `pnpm install --allow-build=esbuild` |
+
+Mèo Nổ cần PostgreSQL và migration riêng: [hướng dẫn chi tiết](exploding-kittens.md).
